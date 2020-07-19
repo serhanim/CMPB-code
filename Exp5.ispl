@@ -1,0 +1,437 @@
+Agent Environment1
+    Vars:
+     e: {e0,e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12};
+     x: {x0,x1}; --shared between person and system
+     w: {w0,w1}; --shared between weight sensor and person
+     b: {b0,b1}; --shared between blood sensor and person
+     ecg: {e0,e1}; --shared between ecg sensor and person
+     p: {p0,p1}; --shared between pedometer sensor and person
+    end Vars
+    Actions = {Req_D_entering,Req_D_weight,Req_D_calculating,Pro_D_wearing,
+    	Pro_D_recommendation,Req_D_bloodTesting, Req_D_ECG,Req_D_mining, 
+    	Req_D_visualizing,Pro_D_intervention,Pro_D_pedometer,Rec_D_pedometer,null_e,loop_e};
+    Protocol:
+    	e=e0 : {Req_D_entering,loop_e};
+    	e=e1 : {Req_D_weight};
+    	e=e2 : {Req_D_calculating};
+    	e=e3 : {Pro_D_wearing,Pro_D_recommendation};
+    	e=e5 : {Req_D_bloodTesting};
+    	e=e6 : {Req_D_ECG};
+    	e=e7 : {Req_D_mining};
+    	e=e8 : {Req_D_visualizing};
+    	e=e9 : {Pro_D_intervention,Pro_D_pedometer};
+        e=e11 : {Rec_D_pedometer};
+    	Other:{loop_e};
+    end Protocol
+    Evolution:
+    	e=e1 if e=e0 and Action=Req_D_entering;
+    	e=e2 if e=e1 and Action=Req_D_weight;
+    	e=e3 if e=e2 and Action=Req_D_calculating and Person1.Action=Req_D_calculating and WeightSensor1.Action=Fulfill;
+    	e=e4 if e=e3 and Action=Pro_D_wearing and Person1.Action=Rec_D_wearing and System1.Action=Fulfill;
+    	e=e5 if e=e3 and Action=Pro_D_recommendation and Person1.Action=Rec_D_recommendation and BloodSensor1.Action=null_bs;
+    	e=e6 if e=e5 and Action=Req_D_bloodTesting and ECGSensor1.Action=null_ecg;
+    	e=e7 if e=e6 and Action=Req_D_ECG and BloodSensor1.Action=Fulfill;
+    	e=e8 if e=e7 and Action=Req_D_mining and ECGSensor1.Action=Fulfill;
+    	e=e9 if e=e8 and Action=Req_D_visualizing and PedometerSensor1.Action=null_ps;
+    	e=e10 if e=e9 and Action=Pro_D_intervention and System1.Action=Pro_D_intervention;
+    	e=e11 if e=e9 and Action=Pro_D_pedometer and System1.Action=Pro_D_pedometer;
+    	e=e12 if e=e11 and Action=Rec_D_pedometer and Person1.Action=Send_D_pedometer and PedometerSensor1.Action=Fulfill; 
+       end Evolution
+end Agent
+Agent System1
+    Vars:
+     sy: {sy0,sy1,sy2,sy3,sy4,sy5,sy6,sy7,sy8,sy9,sy10};
+     x: {x0,x1}; --shared with person
+    end Vars
+    Actions = {Req_D_weight,Fulfill,Req_D_bloodTesting, Req_D_ECG,Rec_D_mining, 
+    	Rec_D_visualizing,Pro_D_intervention,Pro_D_pedometer,Rec_D_pedometer,null_sy};
+    Protocol:
+    	sy=sy1 : {Req_D_weight};
+    	sy=sy2 : {Fulfill};
+    	sy=sy3 : {Req_D_bloodTesting};
+    	sy=sy4 : {Req_D_ECG};
+    	sy=sy5 : {Rec_D_mining};
+    	sy=sy6 : {Rec_D_visualizing};
+    	sy=sy7 : {Pro_D_intervention,Pro_D_pedometer};
+    	sy=sy7 : {Rec_D_pedometer};
+    	Other:{null_sy};
+    end Protocol
+    Evolution:
+    	sy=sy1 if sy=sy0 and Environment1.Action=Req_D_entering and Person1.Action=Req_D_entering;
+    	sy=sy2 if sy=sy1 and Action=Req_D_weight and Environment1.Action=Req_D_weight;
+    	sy=sy2 if sy=sy2 and Action=Fulfill and Environment1.Action=Pro_D_wearing;
+    	sy=sy3 if sy=sy2 and Environment1.Action=Pro_D_recommendation and Person1.Action=Rec_D_recommendation;
+    	sy=sy4 if sy=sy3 and Action=Req_D_bloodTesting and Environment1.Action=Req_D_bloodTesting;
+    	sy=sy5 if sy=sy4 and Action=Req_D_ECG and Environment1.Action=Req_D_ECG;
+    	sy=sy6 if sy=sy5 and Action=Rec_D_mining and Environment1.Action=Req_D_mining;
+    	sy=sy7 if sy=sy6 and Action=Rec_D_visualizing and Environment1.Action=Req_D_visualizing;
+    	sy=sy8 if sy=sy7 and Action=Pro_D_intervention and Environment1.Action=Pro_D_intervention;
+    	sy=sy9 if sy=sy7 and Action=Pro_D_pedometer and Environment1.Action=Pro_D_pedometer;
+    	sy=sy10 if sy=sy9 and Action=Rec_D_pedometer and Environment1.Action=Rec_D_pedometer;
+    end Evolution
+end Agent
+Agent Person1
+    Vars:
+     per: {per0,per1,per2,per3,per4,per5,per6,per7,per8,per9,per10,per11,per12};
+     x: {x0,x1}; --shared with system
+     y: {y0,y1}; --unshared with system
+     w: {w0,w1}; --shared with weight sensor
+     z: {z0,z1}; --unshared with weight sensor
+     b: {b0,b1}; --shared with blood sensor 
+     a: {a0,a1}; --unshared with blood sensor, ecg sensor, pedometer sensor
+     ecg: {e0,e1}; --shared with ecg sensor
+     p: {p0,p1}; --shared with pedometer sensor 
+    end Vars
+    Actions = {Req_D_entering,Req_D_calculating,Rec_D_wearing,
+    	Rec_D_recommendation,Rec_D_bloodTesting, Rec_D_ECG,Req_D_mining, 
+    	Req_D_visualizing,Send_D_pedometer,null_per};
+    Protocol:
+    	per=per0 : {Req_D_entering};
+    	per=per2 : {Req_D_calculating};
+    	per=per3 : {Rec_D_wearing,Rec_D_recommendation};
+    	per=per5 : {Rec_D_bloodTesting};
+    	per=per6 : {Rec_D_ECG};
+    	per=per7 : {Req_D_mining};
+    	per=per8 : {Req_D_visualizing};
+    	per=per11 : {Send_D_pedometer};
+    	Other:{null_per};
+    end Protocol
+    Evolution:
+    	per=per1 if per=per0 and Action=Req_D_entering and Environment1.Action=Req_D_entering;
+    	per=per2 and w=w0 and z=z0 if per=per1 and Environment1.Action=Req_D_weight and System1.Action=Req_D_weight;
+    	per=per3 and x=x1 and y=y0 and w=w0 and z=z0 if per=per2 and Action=Req_D_calculating and Environment1.Action=Req_D_calculating 
+    	                           and WeightSensor1.Action=Fulfill;
+    	per=per4 and x=x1 and y=y0 if per=per3 and Action=Rec_D_wearing and Environment1.Action=Pro_D_wearing 
+    	                and System1.Action=Fulfill;
+    	per=per5 if per=per3 and Action=Rec_D_recommendation and Environment1.Action=Pro_D_recommendation;
+    	per=per6 and b=b0 and a=a0 if per=per5 and Action=Rec_D_bloodTesting and Environment1.Action=Req_D_bloodTesting 
+    	                              and System1.Action=Req_D_bloodTesting;
+    	per=per7 and b=b0 and a=a0 and ecg=e0  if per=per6 and Action=Rec_D_ECG and System1.Action=Req_D_ECG 
+    	                                          and Environment1.Action=Req_D_ECG;
+    	per=per8 and b=b0 and a=a0 and ecg=e0 if per=per7 and Action=Req_D_mining and Environment1.Action=Req_D_mining 
+    	                                         and ECGSensor1.Action=Fulfill;
+    	per=per9 if per=per8 and Action=Req_D_visualizing and Environment1.Action=Req_D_visualizing;
+    	per=per10 if per=per9 and System1.Action=Pro_D_intervention and Environment1.Action=Pro_D_intervention;
+    	per=per11 and a=a0 and p=p0 if per=per9 and System1.Action=Pro_D_pedometer and Environment1.Action=Pro_D_pedometer;
+    	per=per12 and a=a0 and p=p0 if per=per11 and Action=Send_D_pedometer and Environment1.Action=Rec_D_pedometer;
+    end Evolution
+end Agent
+
+Agent WeightSensor1
+    Vars:
+     ws: {ws0,ws1};
+     w: {w0,w1}; --shared with person
+     end Vars
+    Actions = {Fulfill,null_ws};
+    Protocol:
+    	ws=ws1 : {Fulfill};
+        Other:{null_ws};
+    end Protocol
+    Evolution:
+    	ws=ws1 if ws=ws0 and Environment1.Action=Req_D_entering;
+    	ws=ws1 if ws=ws1 and Action=Fulfill and Environment1.Action=Req_D_calculating;
+    end Evolution
+end Agent
+
+Agent BloodSensor1
+    Vars:
+     bs: {bs0,bs1};
+     b: {b0,b1}; --shared with person
+     end Vars
+    Actions = {Fulfill,null_bs};
+    Protocol:
+    	bs=bs1 : {Fulfill};
+       Other:{null_bs};
+    end Protocol
+    Evolution:
+    	bs=bs1 if bs=bs0 and Environment1.Action=Pro_D_recommendation and Person1.Action=Rec_D_recommendation;
+    	bs=bs1 if bs=bs1 and Action=Fulfill and System1.Action=Req_D_ECG and Environment1.Action=Req_D_ECG;
+    end Evolution
+end Agent
+
+Agent ECGSensor1
+    Vars:
+     es: {es0,es1};
+     ecg: {e0,e1}; --shared with person
+     end Vars
+    Actions = {Fulfill,null_ecg};
+    Protocol:
+    	es=es1 : {Fulfill};
+       Other:{null_ecg};
+    end Protocol
+    Evolution:
+    	es=es1 if es=es0 and Environment1.Action=Req_D_bloodTesting and Person1.Action=Rec_D_bloodTesting;
+    	es=es1 if es=es1 and Action=Fulfill and System1.Action=Rec_D_mining and Environment1.Action=Req_D_mining;
+    end Evolution
+end Agent
+
+Agent PedometerSensor1
+    Vars:
+     ps: {ps0,ps1};
+     p: {p0,p1}; --shared with person
+     end Vars
+    Actions = {Fulfill,null_ps};
+    Protocol:
+    	ps=ps1 : {Fulfill};
+       Other:{null_ps};
+    end Protocol
+    Evolution:
+    	ps=ps1 if ps=ps0 and Environment1.Action=Req_D_visualizing and Person1.Action=Req_D_visualizing;
+    	ps=ps1 if ps=ps1 and Action=Fulfill and Environment1.Action=Rec_D_pedometer;
+    end Evolution
+end Agent
+Agent Person2
+    Vars:
+     per_2: {per0,per1,per2,per3,per4,per5,per6,per7,per8,per9,per10,per11,per12};
+     x_2: {x0,x1}; --shared with system
+     y_2: {y0,y1}; --unshared with system
+     w_2: {w0,w1}; --shared with weight sensor
+     z_2: {z0,z1}; --unshared with weight sensor
+     b_2: {b0,b1}; --shared with blood sensor 
+     a_2: {a0,a1}; --unshared with blood sensor, ecg sensor, pedometer sensor
+     ecg_2: {e0,e1}; --shared with ecg sensor
+     p_2: {p0,p1}; --shared with pedometer sensor 
+    end Vars
+    Actions = {Req_D_entering,Req_D_calculating,Rec_D_wearing,
+    	Rec_D_recommendation,Rec_D_bloodTesting, Rec_D_ECG,Req_D_mining, 
+    	Req_D_visualizing,Send_D_pedometer,null_per};
+    Protocol:
+    	per_2=per0 : {Req_D_entering};
+    	per_2=per2 : {Req_D_calculating};
+    	per_2=per3 : {Rec_D_wearing,Rec_D_recommendation};
+    	per_2=per5 : {Rec_D_bloodTesting};
+    	per_2=per6 : {Rec_D_ECG};
+    	per_2=per7 : {Req_D_mining};
+    	per_2=per8 : {Req_D_visualizing};
+    	per_2=per11 : {Send_D_pedometer};
+    	Other:{null_per};
+    end Protocol
+    Evolution:
+    	per_2=per1 if per_2=per0 and Action=Req_D_entering and Environment1.Action=Req_D_entering;
+    	per_2=per2 and w_2=w0 and z_2=z0 if per_2=per1 and Environment1.Action=Req_D_weight and System1.Action=Req_D_weight;
+    	per_2=per3 and x_2=x1 and y_2=y0 and w_2=w0 and z_2=z0 if per_2=per2 and Action=Req_D_calculating and Environment1.Action=Req_D_calculating 
+    	                           and WeightSensor1.Action=Fulfill;
+    	per_2=per4 and x_2=x1 and y_2=y0 if per_2=per3 and Action=Rec_D_wearing and Environment1.Action=Pro_D_wearing 
+    	                and System1.Action=Fulfill;
+    	per_2=per5 if per_2=per3 and Action=Rec_D_recommendation and Environment1.Action=Pro_D_recommendation;
+    	per_2=per6 and b_2=b0 and a_2=a0 if per_2=per5 and Action=Rec_D_bloodTesting and Environment1.Action=Req_D_bloodTesting 
+    	                              and System1.Action=Req_D_bloodTesting;
+    	per_2=per7 and b_2=b0 and a_2=a0 and ecg_2=e0  if per_2=per6 and Action=Rec_D_ECG and System1.Action=Req_D_ECG 
+    	                                          and Environment1.Action=Req_D_ECG;
+    	per_2=per8 and b_2=b0 and a_2=a0 and ecg_2=e0 if per_2=per7 and Action=Req_D_mining and Environment1.Action=Req_D_mining 
+    	                                         and ECGSensor1.Action=Fulfill;
+    	per_2=per9 if per_2=per8 and Action=Req_D_visualizing and Environment1.Action=Req_D_visualizing;
+    	per_2=per10 if per_2=per9 and System1.Action=Pro_D_intervention and Environment1.Action=Pro_D_intervention;
+    	per_2=per11 and a_2=a0 and p_2=p0 if per_2=per9 and System1.Action=Pro_D_pedometer and Environment1.Action=Pro_D_pedometer;
+    	per_2=per12 and a_2=a0 and p_2=p0 if per_2=per11 and Action=Send_D_pedometer and Environment1.Action=Rec_D_pedometer;
+    end Evolution
+end Agent
+Agent Person3
+    Vars:
+     per_3: {per0,per1,per2,per3,per4,per5,per6,per7,per8,per9,per10,per11,per12};
+     x_3: {x0,x1}; --shared with system
+     y_3: {y0,y1}; --unshared with system
+     w_3: {w0,w1}; --shared with weight sensor
+     z_3: {z0,z1}; --unshared with weight sensor
+     b_3: {b0,b1}; --shared with blood sensor 
+     a_3: {a0,a1}; --unshared with blood sensor, ecg sensor, pedometer sensor
+     ecg_3: {e0,e1}; --shared with ecg sensor
+     p_3: {p0,p1}; --shared with pedometer sensor 
+    end Vars
+    Actions = {Req_D_entering,Req_D_calculating,Rec_D_wearing,
+    	Rec_D_recommendation,Rec_D_bloodTesting, Rec_D_ECG,Req_D_mining, 
+    	Req_D_visualizing,Send_D_pedometer,null_per};
+    Protocol:
+    	per_3=per0 : {Req_D_entering};
+    	per_3=per2 : {Req_D_calculating};
+    	per_3=per3 : {Rec_D_wearing,Rec_D_recommendation};
+    	per_3=per5 : {Rec_D_bloodTesting};
+    	per_3=per6 : {Rec_D_ECG};
+    	per_3=per7 : {Req_D_mining};
+    	per_3=per8 : {Req_D_visualizing};
+    	per_3=per11 : {Send_D_pedometer};
+    	Other:{null_per};
+    end Protocol
+    Evolution:
+    	per_3=per1 if per_3=per0 and Action=Req_D_entering and Environment1.Action=Req_D_entering;
+    	per_3=per2 and w_3=w0 and z_3=z0 if per_3=per1 and Environment1.Action=Req_D_weight and System1.Action=Req_D_weight;
+    	per_3=per3 and x_3=x1 and y_3=y0 and w_3=w0 and z_3=z0 if per_3=per2 and Action=Req_D_calculating and Environment1.Action=Req_D_calculating 
+    	                           and WeightSensor1.Action=Fulfill;
+    	per_3=per4 and x_3=x1 and y_3=y0 if per_3=per3 and Action=Rec_D_wearing and Environment1.Action=Pro_D_wearing 
+    	                and System1.Action=Fulfill;
+    	per_3=per5 if per_3=per3 and Action=Rec_D_recommendation and Environment1.Action=Pro_D_recommendation;
+    	per_3=per6 and b_3=b0 and a_3=a0 if per_3=per5 and Action=Rec_D_bloodTesting and Environment1.Action=Req_D_bloodTesting 
+    	                              and System1.Action=Req_D_bloodTesting;
+    	per_3=per7 and b_3=b0 and a_3=a0 and ecg_3=e0  if per_3=per6 and Action=Rec_D_ECG and System1.Action=Req_D_ECG 
+    	                                          and Environment1.Action=Req_D_ECG;
+    	per_3=per8 and b_3=b0 and a_3=a0 and ecg_3=e0 if per_3=per7 and Action=Req_D_mining and Environment1.Action=Req_D_mining 
+    	                                         and ECGSensor1.Action=Fulfill;
+    	per_3=per9 if per_3=per8 and Action=Req_D_visualizing and Environment1.Action=Req_D_visualizing;
+    	per_3=per10 if per_3=per9 and System1.Action=Pro_D_intervention and Environment1.Action=Pro_D_intervention;
+    	per_3=per11 and a_3=a0 and p_3=p0 if per_3=per9 and System1.Action=Pro_D_pedometer and Environment1.Action=Pro_D_pedometer;
+    	per_3=per12 and a_3=a0 and p_3=p0 if per_3=per11 and Action=Send_D_pedometer and Environment1.Action=Rec_D_pedometer;
+    end Evolution
+end Agent
+
+Agent Person4
+    Vars:
+     per_4: {per0,per1,per2,per3,per4,per5,per6,per7,per8,per9,per10,per11,per12};
+     x_4: {x0,x1}; --shared with system
+     y_4: {y0,y1}; --unshared with system
+     w_4: {w0,w1}; --shared with weight sensor
+     z_4: {z0,z1}; --unshared with weight sensor
+     b_4: {b0,b1}; --shared with blood sensor 
+     a_4: {a0,a1}; --unshared with blood sensor, ecg sensor, pedometer sensor
+     ecg_4: {e0,e1}; --shared with ecg sensor
+     p_4: {p0,p1}; --shared with pedometer sensor 
+    end Vars
+    Actions = {Req_D_entering,Req_D_calculating,Rec_D_wearing,
+    	Rec_D_recommendation,Rec_D_bloodTesting, Rec_D_ECG,Req_D_mining, 
+    	Req_D_visualizing,Send_D_pedometer,null_per};
+    Protocol:
+    	per_4=per0 : {Req_D_entering};
+    	per_4=per2 : {Req_D_calculating};
+    	per_4=per3 : {Rec_D_wearing,Rec_D_recommendation};
+    	per_4=per5 : {Rec_D_bloodTesting};
+    	per_4=per6 : {Rec_D_ECG};
+    	per_4=per7 : {Req_D_mining};
+    	per_4=per8 : {Req_D_visualizing};
+    	per_4=per11 : {Send_D_pedometer};
+    	Other:{null_per};
+    end Protocol
+    Evolution:
+    	per_4=per1 if per_4=per0 and Action=Req_D_entering and Environment1.Action=Req_D_entering;
+    	per_4=per2 and w_4=w0 and z_4=z0 if per_4=per1 and Environment1.Action=Req_D_weight and System1.Action=Req_D_weight;
+    	per_4=per3 and x_4=x1 and y_4=y0 and w_4=w0 and z_4=z0 if per_4=per2 and Action=Req_D_calculating and Environment1.Action=Req_D_calculating 
+    	                           and WeightSensor1.Action=Fulfill;
+    	per_4=per4 and x_4=x1 and y_4=y0 if per_4=per3 and Action=Rec_D_wearing and Environment1.Action=Pro_D_wearing 
+    	                and System1.Action=Fulfill;
+    	per_4=per5 if per_4=per3 and Action=Rec_D_recommendation and Environment1.Action=Pro_D_recommendation;
+    	per_4=per6 and b_4=b0 and a_4=a0 if per_4=per5 and Action=Rec_D_bloodTesting and Environment1.Action=Req_D_bloodTesting 
+    	                              and System1.Action=Req_D_bloodTesting;
+    	per_4=per7 and b_4=b0 and a_4=a0 and ecg_4=e0  if per_4=per6 and Action=Rec_D_ECG and System1.Action=Req_D_ECG 
+    	                                          and Environment1.Action=Req_D_ECG;
+    	per_4=per8 and b_4=b0 and a_4=a0 and ecg_4=e0 if per_4=per7 and Action=Req_D_mining and Environment1.Action=Req_D_mining 
+    	                                         and ECGSensor1.Action=Fulfill;
+    	per_4=per9 if per_4=per8 and Action=Req_D_visualizing and Environment1.Action=Req_D_visualizing;
+    	per_4=per10 if per_4=per9 and System1.Action=Pro_D_intervention and Environment1.Action=Pro_D_intervention;
+    	per_4=per11 and a_4=a0 and p_4=p0 if per_4=per9 and System1.Action=Pro_D_pedometer and Environment1.Action=Pro_D_pedometer;
+    	per_4=per12 and a_4=a0 and p_4=p0 if per_4=per11 and Action=Send_D_pedometer and Environment1.Action=Rec_D_pedometer;
+    end Evolution
+end Agent
+
+Agent Person5
+    Vars:
+     per_5: {per0,per1,per2,per3,per4,per5,per6,per7,per8,per9,per10,per11,per12};
+     x_5: {x0,x1}; --shared with system
+     y_5: {y0,y1}; --unshared with system
+     w_5: {w0,w1}; --shared with weight sensor
+     z_5: {z0,z1}; --unshared with weight sensor
+     b_5: {b0,b1}; --shared with blood sensor 
+     a_5: {a0,a1}; --unshared with blood sensor, ecg sensor, pedometer sensor
+     ecg_5: {e0,e1}; --shared with ecg sensor
+     p_5: {p0,p1}; --shared with pedometer sensor 
+    end Vars
+    Actions = {Req_D_entering,Req_D_calculating,Rec_D_wearing,
+    	Rec_D_recommendation,Rec_D_bloodTesting, Rec_D_ECG,Req_D_mining, 
+    	Req_D_visualizing,Send_D_pedometer,null_per};
+    Protocol:
+    	per_5=per0 : {Req_D_entering};
+    	per_5=per2 : {Req_D_calculating};
+    	per_5=per3 : {Rec_D_wearing,Rec_D_recommendation};
+    	per_5=per5 : {Rec_D_bloodTesting};
+    	per_5=per6 : {Rec_D_ECG};
+    	per_5=per7 : {Req_D_mining};
+    	per_5=per8 : {Req_D_visualizing};
+    	per_5=per11 : {Send_D_pedometer};
+    	Other:{null_per};
+    end Protocol
+    Evolution:
+    	per_5=per1 if per_5=per0 and Action=Req_D_entering and Environment1.Action=Req_D_entering;
+    	per_5=per2 and w_5=w0 and z_5=z0 if per_5=per1 and Environment1.Action=Req_D_weight and System1.Action=Req_D_weight;
+    	per_5=per3 and x_5=x1 and y_5=y0 and w_5=w0 and z_5=z0 if per_5=per2 and Action=Req_D_calculating and Environment1.Action=Req_D_calculating 
+    	                           and WeightSensor1.Action=Fulfill;
+    	per_5=per4 and x_5=x1 and y_5=y0 if per_5=per3 and Action=Rec_D_wearing and Environment1.Action=Pro_D_wearing 
+    	                and System1.Action=Fulfill;
+    	per_5=per5 if per_5=per3 and Action=Rec_D_recommendation and Environment1.Action=Pro_D_recommendation;
+    	per_5=per6 and b_5=b0 and a_5=a0 if per_5=per5 and Action=Rec_D_bloodTesting and Environment1.Action=Req_D_bloodTesting 
+    	                              and System1.Action=Req_D_bloodTesting;
+    	per_5=per7 and b_5=b0 and a_5=a0 and ecg_5=e0  if per_5=per6 and Action=Rec_D_ECG and System1.Action=Req_D_ECG 
+    	                                          and Environment1.Action=Req_D_ECG;
+    	per_5=per8 and b_5=b0 and a_5=a0 and ecg_5=e0 if per_5=per7 and Action=Req_D_mining and Environment1.Action=Req_D_mining 
+    	                                         and ECGSensor1.Action=Fulfill;
+    	per_5=per9 if per_5=per8 and Action=Req_D_visualizing and Environment1.Action=Req_D_visualizing;
+    	per_5=per10 if per_5=per9 and System1.Action=Pro_D_intervention and Environment1.Action=Pro_D_intervention;
+    	per_5=per11 and a_5=a0 and p_5=p0 if per_5=per9 and System1.Action=Pro_D_pedometer and Environment1.Action=Pro_D_pedometer;
+    	per_5=per12 and a_5=a0 and p_5=p0 if per_5=per11 and Action=Send_D_pedometer and Environment1.Action=Rec_D_pedometer;
+    end Evolution
+end Agent
+
+Evaluation
+	IntelligentSuggestion_Delivered if Environment1.e=e5;
+	DataPressure_Delivered if Environment1.e=e6;
+	DataSugar_Delivered if Environment1.e=e6;
+	ECGData_Stored if Environment1.e=e6;
+	MiningData_Stared if Environment1.e=e7;
+	SocialData_Stored if Environment1.e=e8;
+	HRDisease_Detected if Environment1.e=e8;
+	EmergencyIntervention_Dispatched if Environment1.e=e10;
+	AllRequiredData_Entered if Environment1.e=e3 or Environment1.e=e4;
+	CalculatingBMI_Started if Environment1.e=e3; 
+	ECGData_Filtered if Environment1.e=e7; 
+	ECGData_Delivered if Environment1.e=e7;
+	PedometerData_delivered if Environment1.e=e11; 
+end Evaluation
+
+InitStates
+	Environment1.e=e0 and Environment1.x=x0 and Environment1.w=w0 and Environment1.b=b0 
+	and Environment1.ecg=e0 and Environment1.p=p0 
+	and
+	System1.sy=sy0 and System1.x=x1  
+	and
+	Person1.per=per0 and Person1.y=y0 and Person1.x=x0 and Person1.z=z0 and  Person1.w=w1 
+	and Person1.a=a0 and  Person1.b=b1 and  Person1.ecg=e1 and Person1.p=p0 
+	and
+    WeightSensor1.ws=ws0 and WeightSensor1.w=w0 
+    and
+    BloodSensor1.bs=bs0 and BloodSensor1.b=b0 
+    and
+    ECGSensor1.es=es0 and ECGSensor1.ecg=e0 
+    and
+    PedometerSensor1.ps=ps0 and PedometerSensor1.p=p0
+    and
+	Person2.per_2=per0 and Person2.y_2=y0 and Person2.x_2=x0 and Person2.z_2=z0 and  Person2.w_2=w1 
+	and Person2.a_2=a0 and  Person2.b_2=b1 and  Person2.ecg_2=e1 and Person2.p_2=p0 
+	and
+	Person3.per_3=per0 and Person3.y_3=y0 and Person3.x_3=x0 and Person3.z_3=z0 and  Person3.w_3=w1 
+	and Person3.a_3=a0 and  Person3.b_3=b1 and  Person3.ecg_3=e1 and Person3.p_3=p0 
+	and
+	Person4.per_4=per0 and Person4.y_4=y0 and Person4.x_4=x0 and Person4.z_4=z0 and  Person4.w_4=w1 
+	and Person4.a_4=a0 and  Person4.b_4=b1 and  Person4.ecg_4=e1 and Person4.p_4=p0 
+	and
+	Person5.per_5=per0 and Person5.y_5=y0 and Person5.x_5=x0 and Person5.z_5=z0 and  Person5.w_5=w1 
+	and Person5.a_5=a0 and  Person5.b_5=b1 and  Person5.ecg_5=e1 and Person5.p_5=p0 ;
+end InitStates
+
+Formulae
+	--reachability properties
+    --phi1	
+	EF ECGData_Filtered and EF ECGData_Delivered;
+	--phi2
+	EF PedometerDataDelivered;
+	--phi3
+	EF WeightData_Delivered;
+	--phi4
+	EF (DataPressure_Delivered and DataSugar_Delivered);
+	--phi5
+	E(! ECGData_Stored U ECGData_Stored and EF MiningData_Stared);
+	--phi6
+	E(!SocialData_Stored U SocialData_Stored and EF MiningData_Stared);
+	--phi7
+	EF IntelligentSuggestion_Delivered;
+	--Liveness properties
+	--phi8
+	AG (HRDisease_Detected -> EF EmergencyIntervention_Dispatched);
+	--Safety properties
+	AG !(AllRequiredData_Entered and AG ! CalculatingBMI_Started);
+end Formulae
